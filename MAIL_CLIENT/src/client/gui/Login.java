@@ -20,16 +20,15 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import org.netbeans.lib.awtextra.AbsoluteLayout;
 
 import client.auth.CheckAuth;
 import client.connetion.ConnectionSocket;
 import client.pop3.GetMailPOP3;
+import mailObject.mail;
 
 public class Login extends JFrame implements ActionListener{
-
 	private JLabel lb1,lb2,lb3,lb4;
 	   private JButton login,reset,exit,register;
 	   private JTextField tf1,tf2;

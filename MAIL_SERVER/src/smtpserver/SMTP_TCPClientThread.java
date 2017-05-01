@@ -2,7 +2,10 @@ package smtpserver;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -15,6 +18,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import mainserver.Server_GUI;
 import pop3server.POP3_TCPClientThread;
 
 public class SMTP_TCPClientThread extends Thread {
@@ -26,7 +30,7 @@ public class SMTP_TCPClientThread extends Thread {
 	public static final int END_STATE = 4;
 
 	public String clientName;
-	private Socket socket;
+	public Socket socket;
 	private ObjectOutputStream output;
 	private ObjectInputStream reader;
 	private int state = 0;
@@ -64,14 +68,15 @@ public class SMTP_TCPClientThread extends Thread {
 				line_from_client = reader.readUTF();
 				if (line_from_client != null) {
 					line_from_client = line_from_client.toLowerCase().trim();
+					Server_GUI.addElementModel(line_from_client);
 					/*
 					 * if received quit command so close connection
 					 */
 					if (line_from_client.equals("quit")) {
 						if (state == END_STATE){
-							if(saveEmail(receiverName, senderName, data)) System.out.println(line_from_client);}
-						
+							if(saveEmail(receiverName, senderName, data)) System.out.println(line_from_client);}		
 						sendMessage("251, Bye");
+						Server_GUI.addElementModel("_____________________________________________________");
 						this.output.close();
 						this.reader.close();
 						this.socket.close();
@@ -191,7 +196,6 @@ public class SMTP_TCPClientThread extends Thread {
 		//tao file
 
 		Date current = new Date();
-
 		String pattern = "EEE, dd MMM yyyy HH:mm:ss Z";
 		SimpleDateFormat format = new SimpleDateFormat(pattern);
 		String dateStr = format.format(current);

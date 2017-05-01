@@ -7,12 +7,13 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import mainserver.Server_GUI;
 import smtpserver.SMTP_TCPClientThread;
 
 public class AUTH_TCPClientThread extends Thread {
 
 	public String clientName;
-	private Socket socket;
+	public Socket socket;
 	private ObjectOutputStream output;
 	private ObjectInputStream reader;
 
@@ -41,14 +42,16 @@ public class AUTH_TCPClientThread extends Thread {
 		String line = "";
 		while (!socket.isClosed()) {
 			try {
-				line = reader.readUTF().trim();				
+				line = reader.readUTF().trim();	
+				Server_GUI.addElementModel(line);
 				/*
 				 * if line.equals("auth login") do check authentication login
 				 */
 				if (line.equals("auth login")) {
 
 					line = reader.readUTF();
-
+					Server_GUI.addElementModel(line);
+					Server_GUI.addElementModel("_____________________________________________________");
 					/*
 					 * send true to client if usermane and password match with
 					 * db
@@ -79,7 +82,8 @@ public class AUTH_TCPClientThread extends Thread {
 					 * if line.equals("create") do create acount
 					 */
 					line = reader.readUTF().trim();
-					
+					Server_GUI.addElementModel(line);
+					Server_GUI.addElementModel("_____________________________________________________");
 					if (Account_Server.userIsExist(line.split(" ")[0])) {
 						/*
 						 * send exist to cllient if username is exist in db

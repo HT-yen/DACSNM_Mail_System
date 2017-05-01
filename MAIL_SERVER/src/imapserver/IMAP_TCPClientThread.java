@@ -12,13 +12,15 @@ package imapserver;
 	import java.util.logging.Level;
 	import java.util.logging.Logger;
 
+import mainserver.Server_GUI;
+
 	public class IMAP_TCPClientThread extends Thread {
 		public static final int USER_STATE = 0;
 		public static final int PASS_STATE = 1;
 		public static final int TRAN_STATE = 2;
 		public static final int END_STATE = 3;
 		public String clientName;
-		private Socket socket;
+		public Socket socket;
 		ObjectOutputStream output;
 		ObjectInputStream reader;
 		private int state = 0;
@@ -57,6 +59,7 @@ package imapserver;
 					line_from_client = reader.readUTF();
 					if (line_from_client != null) {
 						line_from_client = line_from_client.toLowerCase().trim();
+						Server_GUI.addElementModel(line_from_client);
 						/*
 						 * if received quit command so close connection
 						 */
@@ -65,6 +68,7 @@ package imapserver;
 								System.out.println(line_from_client);
 								if (InfoMessageOfUser.deleteAllEmail(user))
 									sendMessage("+OK " + user);
+								Server_GUI.addElementModel("_____________________________________________________");
 								this.output.close();
 								this.reader.close();
 								this.socket.close();

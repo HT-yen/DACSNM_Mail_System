@@ -34,6 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
@@ -52,6 +53,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 	JPanel pn, pn1,pn2;
 	DefaultListModel<String> model;
 	JList<String> listmail;
+	JScrollPane Jscroll;
 
 	public static String getUSER_EMAIL() {
 		return USER_EMAIL;
@@ -142,7 +144,8 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		ta.setBorder(BorderFactory.createLineBorder(Color.RED));
 		pn = new JPanel(new GridLayout(1, 2));
 		pn.add(pn2);
-		pn.add(listmail);
+		Jscroll=new JScrollPane(listmail);
+		pn.add(Jscroll);
 		add(pn);
 		setSize(700, 500);
 		setResizable(false);
