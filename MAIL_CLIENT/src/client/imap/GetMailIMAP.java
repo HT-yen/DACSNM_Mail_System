@@ -13,7 +13,7 @@ import client.connetion.ConnectionSocket;
 public class GetMailIMAP {
 	Socket imapSocket = null;
 	ConnectionSocket conn = null;
-
+	ArrayList<String> listMessage;
 	public void connect(String server, int port) throws Exception {
 		imapSocket = new Socket(server, port);
 		conn = new ConnectionSocket(imapSocket);
@@ -21,150 +21,90 @@ public class GetMailIMAP {
 	public boolean command(String user, String pass) {
 
 		try {
-			int numberOfMail=0;
 			//so mail cua user tren server
 			String response = conn.receive();
 			System.out.println(response);
-			if (!(response.trim().startsWith("+OK"))) {
+			if (!(response.trim().startsWith("OK"))) {
 				conn.closeConnection();
 				return false;
-			}
-			/*
-			 * send command
-			 */
-			conn.sendMsg("USER "+user);
-			response = conn.receive();
-			System.out.println(response);
-			if (!(response.trim().startsWith("+OK"))) {
-				conn.closeConnection();
-				return false;
-			}
-			conn.sendMsg("PASS " +pass);
-			response = conn.receive();
-			System.out.println(response);
-			if (!(response.trim().startsWith("+OK"))) {
-				conn.closeConnection();
-				return false;
-			}
-
-			conn.sendMsg("STAT");
-			response = conn.receive();
-			System.out.println(response);
-			if (!(response.trim().startsWith("+OK"))) {
-				conn.closeConnection();
-				return false;
-			}
-			else{
-				try {
-					numberOfMail=Integer.parseInt(response.substring(4, response.substring(4,response.length()).indexOf(" ")+4));
-				   System.out.println("numberOfMail "+numberOfMail);
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
-				
-			}
-
-			conn.sendMsg("LIST");
-			response = conn.receive();
-			for(int i=0;i<response.length();i++){
-				if(response.charAt(i)!='.')
-					System.out.print(response.charAt(i));
-				else {
-					System.out.println();
-				}
-			}
-			if (!(response.trim().startsWith("+OK"))) {
-				conn.closeConnection();
-				return false;
-			}
-			/*
-			 * request list of mail and information of them
-			 */
-			for(int i=1;i<=numberOfMail;i++) {
-				conn.sendMsg("RETR "+i);
-				response = conn.receive();
-				System.out.println(response);
-				if (!(response.trim().startsWith("+OK"))) {
-					conn.closeConnection();
-					return false;
-				}
-				else {
-					saveIntoMailBox(user,response.substring(4,response.length()));
-					//save content mail into mailbox
-					conn.sendMsg("DELE "+i);
-					//delete mail in db server if take mail successly 
-					response = conn.receive();
-					System.out.println(response);
-					if (!(response.trim().startsWith("+OK"))) {
-						conn.closeConnection();
-						return false;
-					}
-				}
 			}
 			
-			conn.sendMsg("QUIT");
+			conn.sendMsg("CAPABILITY");
 			response = conn.receive();
 			System.out.println(response);
-			if (response.trim().startsWith("+OK")) {
-				System.out.println("DONE! close all connection");
+			if (!(response.trim().startsWith("OK"))) {
 				conn.closeConnection();
-				return true;
+				return false;
+			}
+			conn.sendMsg("LOGIN " +user +" "+pass);
+			response = conn.receive();
+			System.out.println(response);
+			if (!(response.trim().startsWith("OK"))) {
+				conn.closeConnection();
+				return false;
+			}
+
+			conn.sendMsg("SELECT "+user);//với user gửi đi như là tên hòm thư
+			response = conn.receive();
+			System.out.println(response);
+			response = conn.receive();
+			System.out.println(response);
+			try{
+				listMessage=(ArrayList<String>) conn.getObject();	
+			}catch(Exception e)
+			{
+				return false;
+			}
+			
+			conn.sendMsg("CHECK");
+			response = conn.receive();
+			System.out.println(response);
+			//lệnh này k quan trọng trả về gì thì vẫn tiếp tục
+			 
+			conn.sendMsg("CLOSE");//đóng lệnh select
+			response = conn.receive();
+			System.out.println(response);
+			return true;
+		}
+			catch (Exception e) {
+				return false;
+			}
+		
+	}
+	public String getMessageContent(int id) {
+		try{
+			conn.sendMsg("FETCH "+Integer.toString(id));
+			String response = conn.receive();
+			System.out.println(response);
+			if (!response.trim().startsWith("OK")) {
+				return "";
+			}
+			else {
+				response = conn.receive();
+				System.out.println(response);
+				return response;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			return "";
 		}
-
-		try {
+	}
+	public boolean closeConnect() {
+	try{
+		conn.sendMsg("LOGOUT ");
+		String response = conn.receive();
+		System.out.println(response);
+		if (response.trim().startsWith("OK")) {
+			System.out.println("DONE! close all connection");
 			conn.closeConnection();
-		} catch (IOException e) {
-			e.printStackTrace();
+			return true;
 		}
 		return false;
+	} catch (Exception e) {
+		return false;
 	}
-	public boolean saveIntoMailBox(String user, String response) {
-		
-		String folderName = user.split("@")[0].trim();
-		File receiverFolder = new File("Mailbox/" + folderName);
-		receiverFolder.mkdir();
-		//tao folder
-
-		System.out.println(folderName);
-		String[] contentmail=response.split("\\.");
-		String nameMail=contentmail[1].substring(7)+"-"+contentmail[3].substring(9);
-		//name mail in client is sender+subject
-
-		int count = 0;
-		for (File file : receiverFolder.listFiles()) {
-			if (file.getName().equals(nameMail)) {
-				count++;
-			}
-		}
-		File emailFile = new File("Mailbox/" + folderName + "/" +nameMail+ (count == 0 ? "" : ("_" + count)));
-		//tao file
-		String writeToFile = contentmail[0]  + "\n" + contentmail[1] + "\n" + contentmail[2] + "\n" + contentmail[3]+ "\n" + contentmail[4];
-				FileOutputStream output;
-		try {
-			output = new FileOutputStream(emailFile);
-			output.write(writeToFile.getBytes("UTF-8"));
-			output.flush();
-			output.close();
-			return true;
-		} catch (Exception ex) {
-			Logger.getLogger(GetMailIMAP.class.getName()).log(Level.SEVERE, null, ex);
-			return false;
-		}
-	}
+}
 	public ArrayList<String > getAllMail(String user)
 	{
-		ArrayList<String > allmail=new ArrayList<>();
-		File file = new File("Mailbox/" + user.split("@")[0].trim());
-		file.mkdir();
-		if (file.listFiles() == null)
-			System.out.println("null");
-		else {
-			for (File f : file.listFiles())
-				allmail.add(f.getName());
-		}
-		return  allmail;
+		return  listMessage;
 	}
 }

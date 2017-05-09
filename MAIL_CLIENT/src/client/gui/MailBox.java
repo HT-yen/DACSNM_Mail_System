@@ -42,18 +42,23 @@ import javax.swing.event.ListSelectionListener;
 
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 
+import client.imap.GetMailIMAP;
 import client.pop3.GetMailPOP3;
 
 public class MailBox extends javax.swing.JFrame implements ActionListener {
 
 	private static String USER_EMAIL;
 	private static String PASS_EMAIL;
-	JButton TDN_POP3, logout, send,TDN_IMAP;
+	JButton TDN_POP3, logout, send, TDN_IMAP;
 	JTextArea ta;
-	JPanel pn, pn1,pn2;
+	JPanel pn, pn1, pn2;
 	DefaultListModel<String> model;
 	JList<String> listmail;
 	JScrollPane Jscroll;
+	int IMAP_or_POP3 = 0;
+	GetMailIMAP imap;
+	GetMailPOP3 pop3;
+	// 0: default 1: POP3 2: IMAP
 
 	public static String getUSER_EMAIL() {
 		return USER_EMAIL;
@@ -82,7 +87,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		TDN_IMAP.addActionListener(this);
 		logout.addActionListener(this);
 		send.addActionListener(this);
-		listmail=new JList<>();
+		listmail = new JList<>();
 		listmail.setBackground(Color.WHITE);
 		model = new DefaultListModel<String>();
 		listmail.setModel(model);
@@ -91,33 +96,46 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		listmail.setBackground(new Color(203, 241, 241));
 		listmail.setSelectionMode(DefaultListSelectionModel.SINGLE_SELECTION);
 		listmail.addListSelectionListener(new ListSelectionListener() {
-			
+
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				String nameMail = listmail.getSelectedValue();
-				File file = new File("Mailbox/" + USER_EMAIL.split("@")[0].trim());
-				file.mkdir();
-				if (file.listFiles() == null)
-					return;
-				else {
-					String contentTa = "";
-					for (File f : file.listFiles())
-						if (f.getName().equals(nameMail)) {
-							try {
-								BufferedReader dis = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-								// Đọc dữ liệu
-								String line;
-								while ((line = dis.readLine()) != null) {
-									contentTa += line + "\n";
+				if(!model.isEmpty())
+				{
+					if (IMAP_or_POP3 == 1) // POP3
+					{
+						String nameMail = listmail.getSelectedValue();
+						File file = new File("Mailbox/" + USER_EMAIL.split("@")[0].trim());
+						file.mkdir();
+						if (file.listFiles() == null)
+							return;
+						else {
+							String contentTa = "";
+							for (File f : file.listFiles())
+								if (f.getName().equals(nameMail)) {
+									try {
+
+										BufferedReader dis = new BufferedReader(
+												new InputStreamReader(new FileInputStream(f), "UTF-8"));
+										// Đọc dữ liệu
+										String line;
+										while ((line = dis.readLine()) != null) {
+											contentTa += line + "\n";
+										}
+										dis.close();
+										ta.setText(contentTa);
+									} catch (Exception ex) {
+										Logger.getLogger(MailBox.class.getName()).log(Level.SEVERE, null, ex);
+										return;
+									}
 								}
-								dis.close();
-								ta.setText(contentTa);
-							} catch (Exception ex) {
-								Logger.getLogger(MailBox.class.getName()).log(Level.SEVERE, null, ex);
-								return;
-							}
 						}
+					} else if (IMAP_or_POP3 == 2) {
+						int id=listmail.getSelectedIndex();
+						String[] contentmail=imap.getMessageContent(id+1).split("\\.");
+						ta.setText( contentmail[0]  + "\n" + contentmail[1] + "\n" + contentmail[2] + "\n" + contentmail[3]+ "\n" + contentmail[4]);
+					}
 				}
+
 			}
 		});
 		Border loweredBevel = BorderFactory.createLoweredBevelBorder();
@@ -132,19 +150,19 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 			}
 
 		};
-		pn1.setLayout(new GridLayout(4,1));
+		pn1.setLayout(new GridLayout(4, 1));
 		pn1.add(FlowAddButton(send));
 		pn1.add(FlowAddButton(TDN_POP3));
 		pn1.add(FlowAddButton(TDN_IMAP));
 		pn1.add(FlowAddButton(logout));
 		ta = new JTextArea(6, 15);
-		pn2=new JPanel(new GridLayout(2,1));
+		pn2 = new JPanel(new GridLayout(2, 1));
 		pn2.add(pn1);
 		pn2.add(ta);
 		ta.setBorder(BorderFactory.createLineBorder(Color.RED));
 		pn = new JPanel(new GridLayout(1, 2));
 		pn.add(pn2);
-		Jscroll=new JScrollPane(listmail);
+		Jscroll = new JScrollPane(listmail);
 		pn.add(Jscroll);
 		add(pn);
 		setSize(700, 500);
@@ -169,30 +187,44 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		}
 		if (e.getSource() == TDN_POP3) {
 			try {
-				GetMailPOP3 pop3 = new GetMailPOP3();
+				if (!model.isEmpty()) {
+					model.removeAllElements();
+				}
+				ta.setText("");
+				if(imap!=null) imap.closeConnect();
+				//cần close imap thì nó luôn online còn pop3 connect rồi tự động đóng connect rồi
+				IMAP_or_POP3 = 1;
+				pop3 = new GetMailPOP3();
 				pop3.connect("localhost", 110);
 				pop3.command(USER_EMAIL, PASS_EMAIL);
 				ArrayList<String> allMail = pop3.getAllMail(USER_EMAIL);
-				if (!model.isEmpty()){
-					model.removeAllElements();
-					}
-					
 				for (int i = 0; i < allMail.size(); i++) {
 					model.addElement(allMail.get(i));
 					System.out.println(model.getElementAt(i));
 				}
-//			listmail.setModel(model);
-			}
-		        catch (Exception e1) {
+				// listmail.setModel(model);
+			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 		if (e.getSource() == TDN_IMAP) {
 			try {
-				
-			}
-		        catch (Exception e1) {
+				if (!model.isEmpty()) {
+					model.removeAllElements();
+				}
+				ta.setText("");
+				if(imap!=null) imap.closeConnect();
+				IMAP_or_POP3 = 2;
+				imap = new GetMailIMAP();
+				imap.connect("localhost", 143);
+				imap.command(USER_EMAIL, PASS_EMAIL);
+				ArrayList<String> allMail = imap.getAllMail(USER_EMAIL);
+				for (int i = 0; i < allMail.size(); i++) {
+					model.addElement(allMail.get(i));
+					System.out.println(model.getElementAt(i));
+				}
+			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
@@ -203,11 +235,12 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 
 		}
 	}
+
 	public JPanel FlowAddButton(JButton bt) {
-		JPanel pn=new JPanel(new FlowLayout());
+		JPanel pn = new JPanel(new FlowLayout());
 		pn.add(bt);
 		return pn;
-		
+
 	}
-		
+
 }

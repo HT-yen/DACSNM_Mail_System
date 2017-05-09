@@ -87,10 +87,12 @@ public class POP3_TCPClientThread extends Thread {
 							user = line_from_client.substring(5, line_from_client.length()).trim();
 							// take user from "USER user"
 							response = "+OK User name accepted, password please";
+							sendMessage(response);
 							state++;
-						} else
-							response = "-ERR user error ";
-						sendMessage(response);
+						} else {
+							sendMessage("-ERR user error ");
+							return;
+						}
 						break;
 					case PASS_STATE:
 						if (line_from_client.startsWith("pass")) {
@@ -99,10 +101,12 @@ public class POP3_TCPClientThread extends Thread {
 							// and pass is true
 							response = "+OK Mailbox open, " + Integer.toString(InfoMessageOfUser.numberMailOfUser(user))
 									+ " messages";
+							sendMessage(response);
 							state++;
-						} else
-							response = "-ERR password error ";
-						sendMessage(response);
+						} else{
+							sendMessage("-ERR password error ");
+							return;
+						}
 						break;
 					case TRAN_STATE:
 						if (line_from_client.equals("stat")) {
@@ -125,10 +129,12 @@ public class POP3_TCPClientThread extends Thread {
 								if (InfoMessageOfUser.numberMailOfUser(user) == 0) {
 									response = "-EER No such message";
 									sendMessage(response);
+									return;
 								}
 								break;
 							} catch (Exception e) {
 								Logger.getLogger(POP3_TCPClientThread.class.getName()).log(Level.SEVERE, null, e);
+								return;
 							}
 						}
 						if (line_from_client.startsWith("retr")) {
@@ -138,6 +144,7 @@ public class POP3_TCPClientThread extends Thread {
 								if (InfoMessageOfUser.getEmailString(user, ID - 1) == null) {
 									response = "-EER No such message";
 									sendMessage(response);
+									return;
 								} else {
 									response = "+OK " + InfoMessageOfUser.getEmailString(user, ID - 1);
 									sendMessage(response);
@@ -145,6 +152,7 @@ public class POP3_TCPClientThread extends Thread {
 								break;
 							} catch (Exception e) {
 								Logger.getLogger(POP3_TCPClientThread.class.getName()).log(Level.SEVERE, null, e);
+								return;
 							}
 						}
 
@@ -162,9 +170,11 @@ public class POP3_TCPClientThread extends Thread {
 								} catch (Exception e) {
 									response = "-EER No such message";
 									sendMessage(response);
+									return;
 								}
 							} catch (Exception e) {
 								Logger.getLogger(POP3_TCPClientThread.class.getName()).log(Level.SEVERE, null, e);
+								return;
 							}
 						}
 						break;

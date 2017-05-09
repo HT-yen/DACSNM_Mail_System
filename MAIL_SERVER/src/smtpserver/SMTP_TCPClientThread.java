@@ -38,8 +38,8 @@ public class SMTP_TCPClientThread extends Thread {
 	public SMTP_TCPClientThread(Socket socket) {
 		this.socket = socket;
 		try {
-			output= new ObjectOutputStream(this.socket.getOutputStream());
-			reader=new ObjectInputStream(this.socket.getInputStream());
+			output = new ObjectOutputStream(this.socket.getOutputStream());
+			reader = new ObjectInputStream(this.socket.getInputStream());
 		} catch (Exception ex) {
 			Logger.getLogger(SMTP_TCPClientThread.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -73,8 +73,10 @@ public class SMTP_TCPClientThread extends Thread {
 					 * if received quit command so close connection
 					 */
 					if (line_from_client.equals("quit")) {
-						if (state == END_STATE){
-							if(saveEmail(receiverName, senderName, data)) System.out.println(line_from_client);}		
+						if (state == END_STATE) {
+							if (saveEmail(receiverName, senderName, data))
+								System.out.println(line_from_client);
+						}
 						sendMessage("251, Bye");
 						Server_GUI.addElementModel("_____________________________________________________");
 						this.output.close();
@@ -91,26 +93,33 @@ public class SMTP_TCPClientThread extends Thread {
 						if (line_from_client.equals("helo") || line_from_client.startsWith("ehlo ")) {
 							System.out.println(line_from_client);
 							response = "250 hello " + InetAddress.getLocalHost().getHostName() + " ,OK";
+							sendMessage(response);
 							state++;
-						} else
+						} else {
 							response = "ERROR HELO/HELO mail.example.com ";
-						sendMessage(response);
+							sendMessage(response);
+							return;
+						}
 						break;
 					case MAIL_FROM_STATE:
-						if (line_from_client.startsWith("mail from: <") && line_from_client.endsWith(">") && !line_from_client.split("<")[1].equals(">")) {
+						if (line_from_client.startsWith("mail from: <") && line_from_client.endsWith(">")
+								&& !line_from_client.split("<")[1].equals(">")) {
 							/*
 							 * check sender name is null?
 							 */
 							System.out.println(line_from_client);
 							senderName = line_from_client.split("<")[1].split(">")[0];
 							response = "250 sender <" + senderName + "> ,OK";
+							sendMessage(response);
 							/*
 							 * insert code to check validate sender name here
 							 */
 							state++;
-						} else
+						} else {
 							response = "ERROR need command : MAIL FROM: <example@example.com>";
-						sendMessage(response);
+							sendMessage(response);
+							return;
+						}
 						break;
 					case RCPT_TO_STATE:
 						if (line_from_client.startsWith("rcpt to: <") && line_from_client.trim().endsWith(">")
@@ -121,13 +130,16 @@ public class SMTP_TCPClientThread extends Thread {
 							System.out.println(line_from_client);
 							receiverName = line_from_client.split("<")[1].split(">")[0];
 							response = "250 receiver <" + receiverName + "> ,OK";
+							sendMessage(response);
 							/*
 							 * insert code check validate receiver name here
 							 */
 							state++;
-						} else
+						} else {
 							response = "ERROR need command : RCPT TO: <example@example.com>";
-						sendMessage(response);
+							sendMessage(response);
+							return;
+						}
 						break;
 					case DATA_STATE:
 						if (line_from_client.equals("data")) {
@@ -153,11 +165,12 @@ public class SMTP_TCPClientThread extends Thread {
 						} else {
 							data = "ERROR need command DATA";
 							sendMessage(data);
+							return;
 						}
 						break;
 					case END_STATE:
 						sendMessage("ERROR send QUIT to disconnect this communication");
-						break;
+						return;
 					}
 				}
 			}
@@ -171,7 +184,7 @@ public class SMTP_TCPClientThread extends Thread {
 		String folderName = receiverName.split("@")[0].trim();
 		File receiverFolder = new File("db/" + folderName);
 		receiverFolder.mkdir();
-		//tao folder
+		// tao folder
 
 		String subject = "no subject";
 		int indexSubject_start;
@@ -193,10 +206,10 @@ public class SMTP_TCPClientThread extends Thread {
 
 		File emailFile = new File("db/" + folderName + "/" + subject + "-" + senderName + ""
 				+ (count == 0 ? "" : ("_" + count)) + ".email");
-		//tao file
+		// tao file
 
 		Date current = new Date();
-		String pattern = "EEE, dd MMM yyyy HH:mm:ss Z";
+		String pattern = "yyyy-MM-dd hh:mm:ss";
 		SimpleDateFormat format = new SimpleDateFormat(pattern);
 		String dateStr = format.format(current);
 
