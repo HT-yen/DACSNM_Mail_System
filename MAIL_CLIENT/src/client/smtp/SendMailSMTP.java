@@ -13,6 +13,7 @@ public class SendMailSMTP {
 	OutputStream sockOut = null;
 	InputStream sockIn = null;
 	ConnectionSocket conn = null;
+	boolean sendalready=false;
 
 	public void connect(String server, int port) throws Exception {
 		smtpSocket = new Socket(server, port);
@@ -51,9 +52,8 @@ public class SendMailSMTP {
 			conn.sendMsg("RCPT TO: <" + mailto + ">");
 			response = conn.receive();
 			System.out.println(response);
-			if (!(response.trim().startsWith("250"))) {
-				conn.closeConnection();
-				return false;
+			if ((response.trim().startsWith("250"))) {
+				sendalready=true;
 			}
 
 			conn.sendMsg("DATA");
@@ -94,19 +94,8 @@ public class SendMailSMTP {
 		}
 		return false;
 	}
-
-	// Note: we should not use buffering and the method readLine(),
-	// as we do not know how many lines the server returns
-	// and the invocation of readLine is a blocking one
-	// We assume that each response fits into 10000 bytes
-	// private void readResponse(int checkCode) throws IOException {
-	// byte[] readBytes = new byte[10000];
-	// int num = sockIn.read(readBytes);
-	// String resp = new String(readBytes, 0, num);
-	// System.out.println("Server: " + resp);
-	// if (!resp.startsWith(String.valueOf(checkCode))) {
-	// throw new IOException("Unexpected response from the server");
-	// }
-	// }
+	public boolean getSendAlready() {
+		return sendalready;	
+	}
 
 }

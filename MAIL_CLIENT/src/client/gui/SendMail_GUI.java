@@ -24,12 +24,14 @@ public class SendMail_GUI extends JFrame implements ActionListener {
 	JLabel lb1, lb2, lb3, lb4;
 	JTextField tf1, tf2;
 	JTextArea ta;
-	JPanel pn1, pn2, pn3,pn4, pn;
+	JPanel pn1, pn2, pn3, pn4, pn;
 	String user_mail;
+
 	public SendMail_GUI(String user) {
-		this.user_mail=user;
+		this.user_mail = user;
 		initComponents();
 	}
+
 	private void initComponents() {
 		setTitle("Send mail screen");
 		setLocation(500, 200);
@@ -41,7 +43,7 @@ public class SendMail_GUI extends JFrame implements ActionListener {
 		lb4 = new JLabel("Data:");
 		tf1 = new JTextField();
 		tf2 = new JTextField();
-		ta=new JTextArea(50,30);
+		ta = new JTextArea(50, 30);
 		send = new JButton("Send");
 		reset = new JButton("Reset");
 		cancel = new JButton("Cancel");
@@ -70,14 +72,19 @@ public class SendMail_GUI extends JFrame implements ActionListener {
 		add(pn);
 		setSize(400, 300);
 	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		try {
 			if (e.getSource() == send) {
-				SendMailSMTP sm=new SendMailSMTP();
+				SendMailSMTP sm = new SendMailSMTP();
 				sm.connect("localhost", 25);
-				if(sm.command(user_mail, tf1.getText().toString(), tf2.getText().toString(), ta.getText().toString()))
-					JOptionPane.showMessageDialog(null, "sent successful");
+				if (sm.command(user_mail, tf1.getText().toString(), tf2.getText().toString(), ta.getText().toString()))
+					if (sm.getSendAlready())
+						JOptionPane.showMessageDialog(null, "sent successful");
+					else {
+						JOptionPane.showMessageDialog(null, "sent successful but receiver not exist in servermail");
+					}
 				dispose();
 			}
 		} catch (Exception e1) {

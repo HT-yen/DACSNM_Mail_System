@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import authserver.Account_Server;
 import mainserver.Server_GUI;
 import pop3server.POP3_TCPClientThread;
 
@@ -129,7 +130,8 @@ public class SMTP_TCPClientThread extends Thread {
 							 */
 							System.out.println(line_from_client);
 							receiverName = line_from_client.split("<")[1].split(">")[0];
-							response = "250 receiver <" + receiverName + "> ,OK";
+							if(!Account_Server.userIsExist(receiverName)) response="user not exist in server mail";
+							else response = "250 receiver <" + receiverName + "> ,OK";
 							sendMessage(response);
 							/*
 							 * insert code check validate receiver name here
