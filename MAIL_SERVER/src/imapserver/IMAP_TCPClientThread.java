@@ -48,7 +48,7 @@ public class IMAP_TCPClientThread extends Thread {
 
 	@Override
 	public void run() {
-		String response = "", user = "";
+		String response = "", user = "", nameMailbox = "";
 		boolean check = false;
 		// ktra select hay chưa
 		try {
@@ -86,13 +86,14 @@ public class IMAP_TCPClientThread extends Thread {
 							System.out.println(line_from_client);
 							user = line_from_client.substring(6, line_from_client.substring(6).indexOf(" ") + 6).trim();
 							String user_pass = line_from_client.substring(6).trim();
-							if (Account_Server.Authentication(user_pass))
-							{
+							if (Account_Server.Authentication(user_pass)) {
 								response = "OK - login completed, now in authenticated state";
-							}
-							else
+							} else
 								response = "NO - login failure: user name or password rejected ";
 							sendMessage(response);
+							output.writeObject(InfoMessageOfUser.getAllMailBox(user));
+							// gửi danh sách cách message cho clien lựa chọn
+							output.flush();
 						} catch (Exception e) {
 							sendMessage("BAD - command unknown or arguments invalid");
 							return;
@@ -103,7 +104,7 @@ public class IMAP_TCPClientThread extends Thread {
 						System.out.println(line_from_client);
 						try {
 							response = "OK - capability completed IMAP4rev1";
-							sendMessage(response); 
+							sendMessage(response);
 							continue;
 						} catch (Exception e) {
 							response = "BAD - command unknown or arguments invalid";
@@ -121,15 +122,48 @@ public class IMAP_TCPClientThread extends Thread {
 						continue;
 					}
 
+					if (line_from_client.startsWith("create")) {
+						try {
+							System.out.println(line_from_client);
+							String nameMailBox = line_from_client.substring(7);
+							if (InfoMessageOfUser.createMailBox(user, nameMailBox)) {
+								response = "OK - create completed";
+							} else
+								response = "NO - create failure: can't create mailbox with that name ";
+							sendMessage(response);
+							continue;
+						} catch (Exception e) {
+							response = "BAD - command unknown or arguments invalid ";
+							sendMessage(response);
+						}
+					}
+					if (line_from_client.startsWith("delete")) {
+						try {
+							System.out.println(line_from_client);
+							String nameMailBox = line_from_client.substring(7);
+							if (InfoMessageOfUser.delMailBox(user, nameMailBox)) {
+								response = "OK - delete completed";
+							} else
+								response = "NO - delete failure: can't delete mailbox with that name ";
+							sendMessage(response);
+							continue;
+						} catch (Exception e) {
+							response = "BAD - command unknown or arguments invalid ";
+							sendMessage(response);
+						}
+					}
+
 					if (line_from_client.startsWith("select")) {
 						check = true;
 						System.out.println(line_from_client);
-						response = Integer.toString(InfoMessageOfUser.numberMailOfUser(user)) + " EXISTS";
+						nameMailbox = line_from_client.substring(7).trim();
+						response = Integer.toString(InfoMessageOfUser.numberMailOfUser(user, nameMailbox)) + " EXISTS";
 						sendMessage(response);
-						response = Integer.toString(InfoMessageOfUser.numberOfMessageRecentUser(user, new Date()))
-								+ " RECENT";
+						response = Integer.toString(
+								InfoMessageOfUser.numberOfMessageRecentUser(user, nameMailbox, new Date())) + " RECENT";
 						sendMessage(response);
 						output.writeObject(InfoMessageOfUser.arrNameMessageSend);
+						if(InfoMessageOfUser.arrNameMessageSend.size()==0)System.out.println("eeeeeeeeeeeeeeeeeee");
 						// gửi danh sách cách message cho clien lựa chọn
 						output.flush();
 						continue;
@@ -149,14 +183,14 @@ public class IMAP_TCPClientThread extends Thread {
 					if (line_from_client.startsWith("fetch")) {
 						System.out.println(line_from_client);
 						try {
-							int ID = Integer.parseInt(line_from_client.substring(6, line_from_client.length()));
-							if (InfoMessageOfUser.getEmailString(user, ID - 1) == null) {
+							String nameMail = line_from_client.substring(6, line_from_client.length());
+							if (InfoMessageOfUser.getEmailString(user, nameMailbox, nameMail) == null) {
 								response = "Fetch error: can't fetch that data";
 								sendMessage(response);
 							} else {
 								response = "OK - fetch completed";
 								sendMessage(response);
-								response = InfoMessageOfUser.getEmailString(user, ID - 1);
+								response = InfoMessageOfUser.getEmailString(user, nameMailbox, nameMail);
 								sendMessage(response);
 							}
 							continue;
@@ -181,24 +215,29 @@ class InfoMessageOfUser {
 
 	// danh sách tên các message gủi cho client trong đó message nào recent thì
 	// thêm từ new vào sau tên
-	public static int numberMailOfUser(String user) {
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
-		if (file.listFiles() == null)
-			return 0;
+	public static int numberMailOfUser(String user, String nameMailbox) {
+		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox);
+		file.mkdirs();
 		return file.listFiles().length;
 	}
 
-	public static String getEmailString(String user, int ID) throws Exception {
+	public static String getEmailString(String user, String nameMailbox, String nameMail) throws Exception {
 		File f;
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
+		if (nameMail.contains("NEW"))
+			nameMail = nameMail.substring(0, nameMail.length() - 3);
+		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox);
+		file.mkdirs();
 		// System.out.println(file.getName());
 		String arrl = "";
 		if (file.listFiles() == null)
 			return null;
 		else {
-			f = file.listFiles()[ID];
+			f = file.listFiles()[0];
+			for (int i = 1; i < file.listFiles().length; i++) {
+				f = file.listFiles()[i];
+				if (nameMail.equals(f.getName()))
+					break;
+			}
 			BufferedReader dis = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
 
 			// Đọc dữ liệu
@@ -217,7 +256,7 @@ class InfoMessageOfUser {
 	}
 
 	public static Date gettimeConectUserBefore(String user) {
-		File file = new File("timeConnectBefore/" + user.split("@")[0].trim()+"_time");
+		File file = new File("timeConnectBefore/" + user.split("@")[0].trim() + "_time");
 		// System.out.println(file.getName());
 		if (file.length() == 0)
 			return new Date(110, 1, 2);
@@ -245,11 +284,14 @@ class InfoMessageOfUser {
 		File file = new File("timeConnectBefore");
 		file.mkdirs();
 		System.out.println(user);
-		file=new File("timeConnectBefore/" + user.split("@")[0].trim()+"_time");
+		file = new File("timeConnectBefore/" + user.split("@")[0].trim() + "_time");
 		try {
 			FileOutputStream output = new FileOutputStream(file);
-			/* FileOutputStream output = new FileOutputStream(file,false) hoặc FileOutputStream output = new FileOutputStream(file)
-			 *  ở phần append-> mỗi lần ghi là ghi đè */
+			/*
+			 * FileOutputStream output = new FileOutputStream(file,false) hoặc
+			 * FileOutputStream output = new FileOutputStream(file) ở phần
+			 * append-> mỗi lần ghi là ghi đè
+			 */
 
 			String pattern = "yyyy-MM-dd hh:mm:ss";
 			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
@@ -264,48 +306,56 @@ class InfoMessageOfUser {
 		}
 	}
 
-	public static int numberOfMessageRecentUser(String user, Date datecompr) {
-	while(arrNameMessageSend.size()!=0) arrNameMessageSend.remove(0);
-	//remove tất cat phần tử của arrNameMessageSend để tránh add thêm nối vao danh sách trc
+	public static ArrayList<String> getAllMailBox(String user) {
 		File file = new File("db/" + user.split("@")[0].trim());
 		file.mkdirs();
+		ArrayList<String> arr = new ArrayList<>();
+		if (file.listFiles() != null) {
+			for (File f : file.listFiles())
+				if (f.isDirectory())
+					arr.add(f.getName());
+		}
+		return arr;
+	}
+
+	public static int numberOfMessageRecentUser(String user, String nameMailbox, Date datecompr) {
+		arrNameMessageSend=new ArrayList<>();
+		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox);
+		file.mkdirs();
 		try {
-			if (file.listFiles() == null)
-				return 0;
-			else {
-				Date datebefore = gettimeConectUserBefore(user);
-				//ngay sau khi lấy ngày vào trc đó thì set lại ngày vào trước đó bằng thời gian hiện tại 
-				InfoMessageOfUser.settimeConectUser(user);
-				int count = 0;
-				File f;
-				for (int i = 0; i < file.listFiles().length; i++) {
-					f = file.listFiles()[i];
-					BufferedReader dis = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-					// Đọc time gửi của mỗi message(dòng đầu tiên)
-					String line = dis.readLine();
-					String pattern = "yyyy-MM-dd hh:mm:ss";
-					SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-					Date date;
-					try {
-						date = simpleDateFormat.parse(line);
-						System.out.println("NGAY VAO: "+datebefore);
-						System.out.println("NGAY GUI MESSAGE: "+date);
-						if (date.compareTo(datebefore) == 1) {
-							count += 1;
-							arrNameMessageSend.add(f.getName() + " NEW");
-						} else
-							arrNameMessageSend.add(f.getName());
-						/*
-						 * message dc gửi sau lần truy cập trước đó của tài
-						 * khoản này bằng IMAP
-						 */
-					} catch (ParseException e) {
-						e.printStackTrace();
-					}
-					dis.close();
+			Date datebefore = gettimeConectUserBefore(user);
+			// ngay sau khi lấy ngày vào trc đó thì set lại ngày vào trước
+			// đó bằng thời gian hiện tại
+			InfoMessageOfUser.settimeConectUser(user);
+			int count = 0;
+			File f;
+			for (int i = 0; i < file.listFiles().length; i++) {
+				f = file.listFiles()[i];
+				BufferedReader dis = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+				// Đọc time gửi của mỗi message(dòng đầu tiên)
+				String line = dis.readLine();
+				String pattern = "yyyy-MM-dd hh:mm:ss";
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+				Date date;
+				try {
+					date = simpleDateFormat.parse(line);
+					System.out.println("NGAY VAO: " + datebefore);
+					System.out.println("NGAY GUI MESSAGE: " + date);
+					if (date.compareTo(datebefore) == 1) {
+						count += 1;
+						arrNameMessageSend.add(f.getName() + " NEW");
+					} else
+						arrNameMessageSend.add(f.getName());
+					/*
+					 * message dc gửi sau lần truy cập trước đó của tài khoản
+					 * này bằng IMAP
+					 */
+				} catch (ParseException e) {
+					e.printStackTrace();
 				}
-				return count;
+				dis.close();
 			}
+			return count;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return 0;
@@ -313,4 +363,21 @@ class InfoMessageOfUser {
 		}
 	}
 
+	public static boolean createMailBox(String user, String nameMailBox) {
+		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailBox);
+		return file.mkdirs();
+	}
+
+	public static boolean delMailBox(String user, String nameMailBox) {
+		File file = new File("db/" + user.split("@")[0].trim());
+		file.mkdirs();
+		if (file.listFiles() == null)
+			System.out.println("null");
+		else {
+			for (File f : file.listFiles())
+				if (f.getName().equals(nameMailBox))
+					return f.delete();
+		}
+		return false;
+	}
 }

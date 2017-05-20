@@ -184,8 +184,10 @@ public class SMTP_TCPClientThread extends Thread {
 	private boolean saveEmail(String receiverName, String senderName, String data) {
 
 		String folderName = receiverName.split("@")[0].trim();
-		File receiverFolder = new File("db/" + folderName);
-		receiverFolder.mkdir();
+//		File receiverFolder = new File("db/" + folderName);
+//		receiverFolder.mkdirs();
+		File receiverFolder = new File("db/" + folderName+"/inbox");
+		receiverFolder.mkdirs();
 		// tao folder
 
 		String subject = "no subject";
@@ -206,7 +208,7 @@ public class SMTP_TCPClientThread extends Thread {
 			}
 		}
 
-		File emailFile = new File("db/" + folderName + "/" + subject + "-" + senderName + ""
+		File emailFile = new File("db/" + folderName +"/inbox"+ "/" + subject + "-" + senderName + ""
 				+ (count == 0 ? "" : ("_" + count)) + ".email");
 		// tao file
 

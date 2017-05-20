@@ -13,7 +13,7 @@ import client.connetion.ConnectionSocket;
 public class GetMailIMAP {
 	Socket imapSocket = null;
 	ConnectionSocket conn = null;
-	ArrayList<String> listMessage;
+	ArrayList<String> listMessage,listMailBox;
 	public void connect(String server, int port) throws Exception {
 		imapSocket = new Socket(server, port);
 		conn = new ConnectionSocket(imapSocket);
@@ -21,7 +21,6 @@ public class GetMailIMAP {
 	public boolean command(String user, String pass) {
 
 		try {
-			//so mail cua user tren server
 			String response = conn.receive();
 			System.out.println(response);
 			if (!(response.trim().startsWith("OK"))) {
@@ -42,28 +41,8 @@ public class GetMailIMAP {
 			if (!(response.trim().startsWith("OK"))) {
 				conn.closeConnection();
 				return false;
-			}
-
-			conn.sendMsg("SELECT "+user);//với user gửi đi như là tên hòm thư
-			response = conn.receive();
-			System.out.println(response);
-			response = conn.receive();
-			System.out.println(response);
-			try{
-				listMessage=(ArrayList<String>) conn.getObject();	
-			}catch(Exception e)
-			{
-				return false;
-			}
-			
-			conn.sendMsg("CHECK");
-			response = conn.receive();
-			System.out.println(response);
-			//lệnh này k quan trọng trả về gì thì vẫn tiếp tục
-			 
-			conn.sendMsg("CLOSE");//đóng lệnh select
-			response = conn.receive();
-			System.out.println(response);
+			}	
+			listMailBox = (ArrayList<String>) conn.getObject();
 			return true;
 		}
 			catch (Exception e) {
@@ -71,9 +50,66 @@ public class GetMailIMAP {
 			}
 		
 	}
-	public String getMessageContent(int id) {
+	public boolean addMailbox(String nameMailbox) {
+		try {
+			conn.sendMsg("CREATE "+nameMailbox);//gửi đi như là tên hòm thư
+			String response = conn.receive();
+			System.out.println(response);
+			if (!(response.trim().startsWith("OK"))) {
+				return false;
+			}
+			return true;
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return false;
+		}
+	}
+	public boolean delMailbox(String nameMailbox) {
+		try {
+			conn.sendMsg("DELETE "+nameMailbox);//gửi đi như là tên hòm thư
+			String response = conn.receive();
+			System.out.println(response);
+			if (!(response.trim().startsWith("OK"))) {
+				return false;
+			}
+			return true;
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return false;
+		}
+	}
+	public boolean selectMailbox(String nameMailbox) {
+		try {
+			conn.sendMsg("SELECT "+nameMailbox);//gửi đi như là tên hòm thư
+			String response = conn.receive();
+			System.out.println(response);
+			response = conn.receive();
+			System.out.println(response);
+			try {
+				listMessage=(ArrayList<String>) conn.getObject();
+				if(listMessage.size()==0) System.out.println("eeeeeeeeeeeeeeeeeee");
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			conn.sendMsg("CHECK");
+			response = conn.receive();
+			System.out.println(response);
+			//lệnh này k quan trọng trả về gì thì vẫn tiếp tục
+			conn.sendMsg("CLOSE");//đóng lệnh select
+			response = conn.receive();
+			System.out.println(response);
+			return true;
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return false;
+		}
+	}
+	public String getMessageContent(String nameMail) {
 		try{
-			conn.sendMsg("FETCH "+Integer.toString(id));
+			conn.sendMsg("FETCH "+nameMail);
 			String response = conn.receive();
 			System.out.println(response);
 			if (!response.trim().startsWith("OK")) {
@@ -103,8 +139,14 @@ public class GetMailIMAP {
 		return false;
 	}
 }
-	public ArrayList<String > getAllMail(String user)
+	public ArrayList<String > getAllMail()
 	{
+		if(listMessage.size()!=0)
+			System.out.println(listMessage.get(0));;
 		return  listMessage;
+	}
+	public ArrayList<String > getAllMailBox()
+	{
+		return  listMailBox;
 	}
 }

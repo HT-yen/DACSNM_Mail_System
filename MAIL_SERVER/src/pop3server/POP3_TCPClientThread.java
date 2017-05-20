@@ -192,8 +192,8 @@ public class POP3_TCPClientThread extends Thread {
 
 class InfoMessageOfUser {
 	public static int numberMailOfUser(String user) {
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
+		File file = new File("db/" + user.split("@")[0].trim()+"/inbox");
+		file.mkdirs();
 		if (file.listFiles() == null)
 			return 0;
 		return file.listFiles().length;
@@ -201,8 +201,8 @@ class InfoMessageOfUser {
 
 	public static long getEmailSize(String user, int ID) throws Exception {
 		File f;
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
+		File file = new File("db/" + user.split("@")[0].trim()+"/inbox");
+		file.mkdirs();
 		// System.out.println(file.getName());
 		if (file.listFiles() == null)
 			return 0;
@@ -214,8 +214,8 @@ class InfoMessageOfUser {
 
 	public static String getEmailString(String user, int ID) throws Exception {
 		File f;
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
+		File file = new File("db/" + user.split("@")[0].trim()+"/inbox");
+		file.mkdirs();
 		// System.out.println(file.getName());
 		String arrl = "";
 		if (file.listFiles() == null)
@@ -241,9 +241,8 @@ class InfoMessageOfUser {
 
 	public static long sumSizeMailOfUser(String user) {
 		long sum = 0;
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
-		String arrl = "";
+		File file = new File("db/" + user.split("@")[0].trim()+"/inbox");
+		file.mkdirs();
 		if (file.listFiles() == null)
 			System.out.println("null");
 		else {
@@ -254,8 +253,8 @@ class InfoMessageOfUser {
 	}
 
 	public static boolean deleteAllEmail(String user) {
-		File file = new File("db/" + user.split("@")[0].trim());
-		file.mkdir();
+		File file = new File("db/" + user.split("@")[0].trim()+"/inbox");
+		file.mkdirs();
 		if (file.listFiles() == null)
 			System.out.println("null");
 		else {

@@ -36,6 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -44,20 +45,22 @@ import org.netbeans.lib.awtextra.AbsoluteConstraints;
 
 import client.imap.GetMailIMAP;
 import client.pop3.GetMailPOP3;
+import client.gui.*;;
 
 public class MailBox extends javax.swing.JFrame implements ActionListener {
 
 	private static String USER_EMAIL;
 	private static String PASS_EMAIL;
-	JButton TDN_POP3, logout, send, TDN_IMAP;
-	JTextArea ta;
-	JPanel pn, pn1, pn2;
-	DefaultListModel<String> model;
-	JList<String> listmail;
+	JButton TDN_POP3, logout, send, TDN_IMAP, add, copy, paste, delete, ok, cancel;
+	JTextArea ta, namMB;
+	JPanel pn, pn1, pn2, pn3, pn4;
+	DefaultListModel<String> model, model1;
+	JList<String> listmail, listmailbox;
 	JScrollPane Jscroll;
 	int IMAP_or_POP3 = 0;
 	GetMailIMAP imap;
 	GetMailPOP3 pop3;
+	confirmDialog cd;
 	// 0: default 1: POP3 2: IMAP
 
 	public static String getUSER_EMAIL() {
@@ -75,6 +78,8 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		setLocation(300, 100);
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		namMB = new JTextArea(3, 20);
+		namMB.setText("Nhập tên hộp thư cần tạo");
 		TDN_POP3 = new JButton("Thư đã nhận_POP3");
 		TDN_IMAP = new JButton("Thư đã nhận_IMAP");
 		logout = new JButton("Đăng xuất");
@@ -88,19 +93,23 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		logout.addActionListener(this);
 		send.addActionListener(this);
 		listmail = new JList<>();
+		listmailbox = new JList<>();
 		listmail.setBackground(Color.WHITE);
 		model = new DefaultListModel<String>();
+		model1 = new DefaultListModel<String>();
 		listmail.setModel(model);
 		listmail.setForeground(new Color(255, 0, 0));
 		listmail.setFont(new Font("Consolas", 0, 17));
 		listmail.setBackground(new Color(203, 241, 241));
 		listmail.setSelectionMode(DefaultListSelectionModel.SINGLE_SELECTION);
-		listmail.addListSelectionListener(new ListSelectionListener() {
-
+		listmail.addMouseListener(new MouseListener() {
+			
 			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(!model.isEmpty())
-				{
+			public void mouseReleased(MouseEvent e) {}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (!model.isEmpty()) {
 					if (IMAP_or_POP3 == 1) // POP3
 					{
 						String nameMail = listmail.getSelectedValue();
@@ -130,13 +139,22 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 								}
 						}
 					} else if (IMAP_or_POP3 == 2) {
-						int id=listmail.getSelectedIndex();
-						String[] contentmail=imap.getMessageContent(id+1).split("\\.");
-						ta.setText( contentmail[0]  + "\n" + contentmail[1] + "\n" + contentmail[2] + "\n" + contentmail[3]+ "\n" + contentmail[4]);
+						String nameMail = listmail.getSelectedValue();
+						String[] contentmail = imap.getMessageContent(nameMail).split("\\.");
+						ta.setText(contentmail[0] + "\n" + contentmail[1] + "\n" + contentmail[2] + "\n"
+								+ contentmail[3] + "\n" + contentmail[4]);
 					}
 				}
-
 			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {}
 		});
 		Border loweredBevel = BorderFactory.createLoweredBevelBorder();
 		listmail.setBorder(loweredBevel);
@@ -163,7 +181,84 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		pn = new JPanel(new GridLayout(1, 2));
 		pn.add(pn2);
 		Jscroll = new JScrollPane(listmail);
-		pn.add(Jscroll);
+		pn3 = new JPanel(new GridLayout(2, 1));
+		add = new JButton("add");
+		delete = new JButton("del");
+		copy = new JButton("copy");
+		paste = new JButton("paste");
+		ok = new JButton("OK");
+		cancel = new JButton("CANCEL");
+		add.setEnabled(false);
+		delete.setEnabled(false);
+		copy.setEnabled(false);
+		paste.setEnabled(false);
+		ok.setEnabled(false);
+		cancel.setEnabled(false);
+		add.addActionListener(this);
+		delete.addActionListener(this);
+		copy.addActionListener(this);
+		paste.addActionListener(this);
+		ok.addActionListener(this);
+		cancel.addActionListener(this);
+		pn3.add(Jscroll);
+		JPanel pn4 = new JPanel(new FlowLayout());
+		pn4.add(listmailbox);
+		pn4.add(add);
+		pn4.add(delete);
+		pn4.add(copy);
+		pn4.add(paste);
+		pn4.add(ok);
+		pn4.add(cancel);
+		pn4.add(namMB);
+		listmailbox.setVisible(false);
+		namMB.setVisible(false);
+		listmailbox.setModel(model1);
+		model1.addElement("11");
+		model1.addElement("12");
+		listmailbox.setFont(new Font("Consolas", 0, 14));
+		listmailbox.setBackground(new Color(213, 200, 200));
+		listmailbox.setSelectionMode(DefaultListSelectionModel.SINGLE_SELECTION);
+		listmailbox.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				delete.setEnabled(true);
+				if (!model.isEmpty()) {
+					model.removeAllElements();
+				}
+				if (!model1.isEmpty()) {
+					ta.setText("");
+					String nameMailbox = listmailbox.getSelectedValue();
+					if (imap != null)
+						imap.selectMailbox(nameMailbox);
+					ArrayList<String> allMail = imap.getAllMail();
+					for (int i = 0; i < allMail.size(); i++) {
+						model.addElement(allMail.get(i));
+					}
+				}
+
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+			}
+		});
+
+		listmailbox.setVisible(false);
+		pn3.add(pn4);
+		pn.add(pn3);
 		add(pn);
 		setSize(700, 500);
 		setResizable(false);
@@ -174,6 +269,61 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 
 		try {
+			if (e.getSource() == ok) {
+				if (imap != null) {
+					if (imap.addMailbox(namMB.getText().toString().trim()))
+						JOptionPane.showMessageDialog(null, "Create successfuly!");
+					else
+						JOptionPane.showMessageDialog(null, "Create failure!");
+					namMB.setText("");
+				} else {
+					JOptionPane.showMessageDialog(null, "IMAP not ready! try later!");
+				}
+			}
+			if (e.getSource() == cancel) {
+				namMB.setText("");
+				namMB.setVisible(false);
+				ok.setEnabled(false);
+				cancel.setEnabled(false);
+			}
+			if (e.getSource() == add) {
+				namMB.setVisible(true);
+				ok.setEnabled(true);
+				cancel.setEnabled(true);
+			}
+			if (e.getSource() == delete) {
+				String selectedMalbox = listmailbox.getSelectedValue();
+				cd = new confirmDialog(selectedMalbox);
+				cd.getDEL().addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						if (imap != null)
+							if (imap.delMailbox(selectedMalbox))
+								JOptionPane.showMessageDialog(null, "delete successfuly!");
+							else {
+								JOptionPane.showMessageDialog(null, "delete failture!");
+							}
+						cd.dispose();
+						delete.setEnabled(false);
+					}
+				});
+				cd.getCancel().addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						cd.dispose();
+						delete.setEnabled(false);
+					}
+				});
+			}
+
+			if (e.getSource() == copy) {
+
+			}
+			if (e.getSource() == paste) {
+
+			}
 			if (e.getSource() == send) {
 				Thread t = new Thread() {
 					public void run() {
@@ -187,12 +337,25 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		}
 		if (e.getSource() == TDN_POP3) {
 			try {
+				add.setEnabled(false);
+				delete.setEnabled(false);
+				copy.setEnabled(false);
+				paste.setEnabled(false);
+				ok.setEnabled(false);
+				cancel.setEnabled(false);
+				namMB.setVisible(false);
+				listmailbox.setVisible(false);
 				if (!model.isEmpty()) {
 					model.removeAllElements();
 				}
+				if (!model1.isEmpty()) {
+					model1.removeAllElements();
+				}
 				ta.setText("");
-				if(imap!=null) imap.closeConnect();
-				//cần close imap thì nó luôn online còn pop3 connect rồi tự động đóng connect rồi
+				if (imap != null)
+					imap.closeConnect();
+				// cần close imap thì nó luôn online còn pop3 connect rồi tự
+				// động đóng connect rồi
 				IMAP_or_POP3 = 1;
 				pop3 = new GetMailPOP3();
 				pop3.connect("localhost", 110);
@@ -202,27 +365,33 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 					model.addElement(allMail.get(i));
 					System.out.println(model.getElementAt(i));
 				}
-				// listmail.setModel(model);
 			} catch (Exception e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 		if (e.getSource() == TDN_IMAP) {
 			try {
+				add.setEnabled(true);
+				// delete.setEnabled(true);
+				copy.setEnabled(true);
+				listmailbox.setVisible(true);
 				if (!model.isEmpty()) {
 					model.removeAllElements();
 				}
+				if (!model1.isEmpty()) {
+					model1.removeAllElements();
+				}
 				ta.setText("");
-				if(imap!=null) imap.closeConnect();
+				if (imap != null)
+					imap.closeConnect();
 				IMAP_or_POP3 = 2;
 				imap = new GetMailIMAP();
 				imap.connect("localhost", 143);
-				imap.command(USER_EMAIL, PASS_EMAIL);
-				ArrayList<String> allMail = imap.getAllMail(USER_EMAIL);
-				for (int i = 0; i < allMail.size(); i++) {
-					model.addElement(allMail.get(i));
-					System.out.println(model.getElementAt(i));
+				if (imap.command(USER_EMAIL, PASS_EMAIL)) {
+					ArrayList<String> allMailBox = imap.getAllMailBox();
+					for (int i = 0; i < allMailBox.size(); i++) {
+						model1.addElement(allMailBox.get(i));
+					}
 				}
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
