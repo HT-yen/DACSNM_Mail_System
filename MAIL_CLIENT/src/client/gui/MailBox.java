@@ -57,12 +57,12 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 	DefaultListModel<String> model, model1;
 	JList<String> listmail, listmailbox;
 	JScrollPane Jscroll;
-	int IMAP_or_POP3 = 0;
+	int IMAP_or_POP3 = 0;// 0: default 1: POP3 2: IMAP
 	GetMailIMAP imap;
 	GetMailPOP3 pop3;
 	confirmDialog cd;
-	// 0: default 1: POP3 2: IMAP
-
+	String NameMailCopy,NameMailBoxPaste,contentmail;
+	boolean iscopy=false;
 	public static String getUSER_EMAIL() {
 		return USER_EMAIL;
 	}
@@ -139,6 +139,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 								}
 						}
 					} else if (IMAP_or_POP3 == 2) {
+						copy.setEnabled(true);
 						String nameMail = listmail.getSelectedValue();
 						String[] contentmail = imap.getMessageContent(nameMail).split("\\.");
 						ta.setText(contentmail[0] + "\n" + contentmail[1] + "\n" + contentmail[2] + "\n"
@@ -240,7 +241,8 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 						model.addElement(allMail.get(i));
 					}
 				}
-
+				if(copy.isEnabled()&&(iscopy))
+					if(NameMailCopy!=null) paste.setEnabled(true);
 			}
 
 			@Override
@@ -267,7 +269,6 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
 		try {
 			if (e.getSource() == ok) {
 				if (imap != null) {
@@ -319,10 +320,19 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 			}
 
 			if (e.getSource() == copy) {
-
+				iscopy=true;
+				NameMailCopy=listmail.getSelectedValue();
+			    contentmail = imap.getMessageContent(NameMailCopy);
+			    if(contentmail.equals("")) JOptionPane.showMessageDialog(null, "Choice message to copy!");
 			}
 			if (e.getSource() == paste) {
-
+				NameMailBoxPaste=listmailbox.getSelectedValue();
+				if((NameMailBoxPaste!=null)&&((NameMailCopy!=null))&&(imap!=null))
+					if(imap.copyMail(NameMailCopy, NameMailBoxPaste, contentmail))JOptionPane.showMessageDialog(null, "Copy successfully!");
+					else JOptionPane.showMessageDialog(null, "Copy failure!");
+				copy.setEnabled(false);
+				paste.setEnabled(false);
+				iscopy=false;
 			}
 			if (e.getSource() == send) {
 				Thread t = new Thread() {
@@ -371,9 +381,13 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		}
 		if (e.getSource() == TDN_IMAP) {
 			try {
+				iscopy=false;
 				add.setEnabled(true);
-				// delete.setEnabled(true);
-				copy.setEnabled(true);
+				paste.setEnabled(false);
+				copy.setEnabled(false);
+				delete.setEnabled(false);
+				ok.setEnabled(false);
+				cancel.setEnabled(false);
 				listmailbox.setVisible(true);
 				if (!model.isEmpty()) {
 					model.removeAllElements();

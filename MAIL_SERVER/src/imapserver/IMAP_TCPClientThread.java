@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import authserver.Account_Server;
 import mainserver.Server_GUI;
 import pop3server.POP3_TCPClientThread;
+import smtpserver.SMTP_TCPClientThread;
 
 public class IMAP_TCPClientThread extends Thread {
 	public String clientName;
@@ -152,6 +153,25 @@ public class IMAP_TCPClientThread extends Thread {
 							sendMessage(response);
 						}
 					}
+					if (line_from_client.startsWith("copy")) {
+						try {
+							System.out.println(line_from_client);
+							String nameMail = line_from_client.substring(5,
+									line_from_client.substring(5).indexOf(" ") + 5);
+							String nameMailBox = line_from_client
+									.substring(line_from_client.substring(5).indexOf(" ") + 6);
+							String content = reader.readUTF();
+							if (InfoMessageOfUser.copyMail(user, nameMail, nameMailBox, content)) {
+								response = "OK - copy completed";
+							} else
+								response = "NO - copy error: can't copy those messages or to that name";
+							sendMessage(response);
+							continue;
+						} catch (Exception e) {
+							response = "BAD - command unknown or arguments invalid ";
+							sendMessage(response);
+						}
+					}
 
 					if (line_from_client.startsWith("select")) {
 						check = true;
@@ -163,9 +183,9 @@ public class IMAP_TCPClientThread extends Thread {
 								InfoMessageOfUser.numberOfMessageRecentUser(user, nameMailbox, new Date())) + " RECENT";
 						sendMessage(response);
 						output.writeObject(InfoMessageOfUser.arrNameMessageSend);
-						if(InfoMessageOfUser.arrNameMessageSend.size()==0)System.out.println("eeeeeeeeeeeeeeeeeee");
-						// gửi danh sách cách message cho clien lựa chọn
-						output.flush();
+						if (InfoMessageOfUser.arrNameMessageSend.size() == 0)
+							// gửi danh sách cách message cho clien lựa chọn
+							output.flush();
 						continue;
 					}
 					if (line_from_client.equals("close")) {
@@ -177,7 +197,6 @@ public class IMAP_TCPClientThread extends Thread {
 						} catch (Exception e) {
 							response = "BAD - command unknown or arguments invalid";
 							sendMessage(response);
-							return;
 						}
 					}
 					if (line_from_client.startsWith("fetch")) {
@@ -191,13 +210,13 @@ public class IMAP_TCPClientThread extends Thread {
 								response = "OK - fetch completed";
 								sendMessage(response);
 								response = InfoMessageOfUser.getEmailString(user, nameMailbox, nameMail);
+								System.out.println("contenttttt mail" + response + " \n \n");
 								sendMessage(response);
 							}
 							continue;
 						} catch (Exception e) {
 							response = "BAD - command unknown or arguments invalid ";
 							sendMessage(response);
-							return;
 						}
 					}
 				}
@@ -222,37 +241,23 @@ class InfoMessageOfUser {
 	}
 
 	public static String getEmailString(String user, String nameMailbox, String nameMail) throws Exception {
-		File f;
-		if (nameMail.contains("NEW"))
-			nameMail = nameMail.substring(0, nameMail.length() - 3);
-		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox);
-		file.mkdirs();
-		// System.out.println(file.getName());
-		String arrl = "";
-		if (file.listFiles() == null)
-			return null;
-		else {
-			f = file.listFiles()[0];
-			for (int i = 1; i < file.listFiles().length; i++) {
-				f = file.listFiles()[i];
-				if (nameMail.equals(f.getName()))
-					break;
-			}
-			BufferedReader dis = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-
+		try {
+			if (nameMail.contains("NEW"))
+				nameMail = nameMail.substring(0, nameMail.length() - 3);
+			File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox + "/" + nameMail);
+			String arrl = "";
+			BufferedReader dis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 			// Đọc dữ liệu
-			try {
-				String line;
-				while ((line = dis.readLine()) != null) {
-					arrl += line + ".";
-				}
-				dis.close();
-			} catch (Exception ex) {
-				Logger.getLogger(IMAP_TCPClientThread.class.getName()).log(Level.SEVERE, null, ex);
-				return null;
+			String line;
+			while ((line = dis.readLine()) != null) {
+				arrl += line + ".";
 			}
+			dis.close();
+			return arrl;
+		} catch (Exception ex) {
+			Logger.getLogger(IMAP_TCPClientThread.class.getName()).log(Level.SEVERE, null, ex);
+			return null;
 		}
-		return arrl;
 	}
 
 	public static Date gettimeConectUserBefore(String user) {
@@ -319,7 +324,7 @@ class InfoMessageOfUser {
 	}
 
 	public static int numberOfMessageRecentUser(String user, String nameMailbox, Date datecompr) {
-		arrNameMessageSend=new ArrayList<>();
+		arrNameMessageSend = new ArrayList<>();
 		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox);
 		file.mkdirs();
 		try {
@@ -368,16 +373,36 @@ class InfoMessageOfUser {
 		return file.mkdirs();
 	}
 
+	////////
+	public static boolean copyMail(String user, String nameMail, String nameMailBox, String content) {
+		try {
+			File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailBox + "/" + nameMail);
+			FileOutputStream output;
+			content = content.replaceAll("\\.", "\n");
+			try {
+				output = new FileOutputStream(file);
+				output.write(content.getBytes("UTF-8"));
+				output.flush();
+				output.close();
+				return true;
+			} catch (Exception ex) {
+				Logger.getLogger(IMAP_TCPClientThread.class.getName()).log(Level.SEVERE, null, ex);
+				return false;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	public static boolean delMailBox(String user, String nameMailBox) {
-		File file = new File("db/" + user.split("@")[0].trim());
+		File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailBox);
 		file.mkdirs();
 		if (file.listFiles() == null)
-			System.out.println("null");
+			return file.delete();
 		else {
 			for (File f : file.listFiles())
-				if (f.getName().equals(nameMailBox))
-					return f.delete();
+				f.delete();
+			return file.delete();
 		}
-		return false;
 	}
 }

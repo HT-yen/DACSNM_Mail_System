@@ -80,6 +80,22 @@ public class GetMailIMAP {
 			return false;
 		}
 	}
+	public boolean copyMail(String nameMail, String nameMailbox ,String content) {
+		try {
+			conn.sendMsg("COPY "+nameMail+" "+nameMailbox);//gửi đi như là tên hòm thư
+			conn.sendMsg(content);
+			String response = conn.receive();
+			System.out.println(response);
+			if (!(response.trim().startsWith("OK"))) {
+				return false;
+			}
+			return true;
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return false;
+		}
+	}
 	public boolean selectMailbox(String nameMailbox) {
 		try {
 			conn.sendMsg("SELECT "+nameMailbox);//gửi đi như là tên hòm thư
@@ -89,7 +105,6 @@ public class GetMailIMAP {
 			System.out.println(response);
 			try {
 				listMessage=(ArrayList<String>) conn.getObject();
-				if(listMessage.size()==0) System.out.println("eeeeeeeeeeeeeeeeeee");
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
