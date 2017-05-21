@@ -127,11 +127,10 @@ public class GetMailPOP3 {
 		File receiverFolder = new File("Mailbox/" + folderName);
 		receiverFolder.mkdir();
 		//tao folder
-
 		System.out.println(folderName);
 		String[] contentmail=response.split("\\.");
 		String nameMail=contentmail[1].substring(7)+"-"+contentmail[3].substring(9);
-		//name mail in client is sender+subject
+		//name mail is sender+subject
 
 		int count = 0;
 		for (File file : receiverFolder.listFiles()) {

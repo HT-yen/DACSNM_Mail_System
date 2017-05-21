@@ -208,8 +208,8 @@ public class SMTP_TCPClientThread extends Thread {
 			}
 		}
 
-		File emailFile = new File("db/" + folderName +"/inbox"+ "/" + subject + "-" + senderName + ""
-				+ (count == 0 ? "" : ("_" + count)) + ".email");
+		File emailFile = new File("db/" + folderName +"/inbox"+ "/" + senderName + "-" +  subject+ ""
+				+ (count == 0 ? "" : ("_" + count)));
 		// tao file
 
 		Date current = new Date();
