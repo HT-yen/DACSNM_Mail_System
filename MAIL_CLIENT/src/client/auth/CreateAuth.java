@@ -6,6 +6,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import com.sun.corba.se.spi.servicecontext.UEInfoServiceContext;
+
 import client.connetion.ConnectionSocket;
 
 public class CreateAuth {
@@ -22,6 +24,7 @@ public class CreateAuth {
 				|| (user.contains("\\")) || (user.contains("|"))||(user.contains(","))||(user.contains(".")))
 			return false;
 		//name cannot have \,|,/,.,,,*,-,+,...
+		if(user.split("@")[0].equals("")) return false;//cannot @abc
 		if((user.split("@").length!=2) ||!(user.split("@")[1].trim().equals("abc")) )return false;
 		//name must follow format: name@abc
 		String response = "";

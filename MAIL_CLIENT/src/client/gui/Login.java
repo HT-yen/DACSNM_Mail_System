@@ -43,7 +43,7 @@ public class Login extends JFrame implements ActionListener{
          lb2=new JLabel("Email: ");
          lb3=new JLabel( "Password");
          
-         tf1=new JTextField();
+         tf1=new JTextField("@abc");
          tf2=new JTextField();
          ImageIcon icon= new ImageIcon("image/button.png");
          login=new JButton("",new ImageIcon("image/login.png"));
@@ -102,7 +102,7 @@ public class Login extends JFrame implements ActionListener{
 					else 
 					{
 						
-						tf1.setText("");
+						tf1.setText("@abc");
 						tf2.setText("");
 						JOptionPane.showMessageDialog(null,"No see you account!");
 					}
@@ -120,7 +120,7 @@ public class Login extends JFrame implements ActionListener{
 				new Register();
 			}
 			if(e.getSource()==reset){
-				tf1.setText("");
+				tf1.setText("@abc");
 				tf2.setText("");
 			}
 			if(e.getSource()==exit) System.exit(0);

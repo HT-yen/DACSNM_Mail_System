@@ -76,7 +76,7 @@ public class Register extends javax.swing.JFrame implements ActionListener{
 		lb6 = new JLabel("");
 		lb7 = new JLabel("");
 
-		tf1 = new JTextField();
+		tf1 = new JTextField("@abc");
 		tf2 = new JTextField();
 		tf3=new JTextField();
 
@@ -150,7 +150,7 @@ public class Register extends javax.swing.JFrame implements ActionListener{
 						}
 						else 
 						{							
-							tf1.setText("");
+							tf1.setText("@abc");
 							tf2.setText("");
 							tf3.setText("");
 							JOptionPane.showMessageDialog(null,"Cannot create this account!");

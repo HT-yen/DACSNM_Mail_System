@@ -21,7 +21,7 @@ public class confirmDialog extends JFrame {
 		setSize(200, 100);
 		setResizable(false);
 		setVisible(true);
-		setLocation(800, 500);
+		setLocation(600, 300);
 	}
 	public JButton getDEL() {
 		return del;
