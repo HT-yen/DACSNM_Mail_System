@@ -31,7 +31,8 @@ import mailObject.mail;
 public class Login extends JFrame implements ActionListener{
 	private JLabel lb1,lb2,lb3,lb4;
 	   private JButton login,reset,exit,register;
-	   private JTextField tf1,tf2;
+	   private JTextField tf1;
+	   private JPasswordField tf2;
 	   private JPanel pn1,pn2,pn3,pn;
      public Login(String s){
      	setTitle(s);
@@ -44,7 +45,7 @@ public class Login extends JFrame implements ActionListener{
          lb3=new JLabel( "Password");
          
          tf1=new JTextField("@abc");
-         tf2=new JTextField();
+         tf2=new JPasswordField();
          ImageIcon icon= new ImageIcon("image/button.png");
          login=new JButton("",new ImageIcon("image/login.png"));
          login.setPreferredSize( new Dimension(icon.getIconWidth(), icon.getIconHeight()));
