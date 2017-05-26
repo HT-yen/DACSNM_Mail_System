@@ -41,7 +41,7 @@ public class Server_GUI extends JFrame implements ActionListener {
 	MainServer ms=new MainServer();
 
 	public Server_GUI() {
-		setTitle("YOUR MAILBOX");
+		setTitle("MAIL SERVER");
 		setLocation(300, 100);
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

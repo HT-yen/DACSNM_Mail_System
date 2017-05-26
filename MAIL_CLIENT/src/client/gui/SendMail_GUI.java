@@ -83,7 +83,7 @@ public class SendMail_GUI extends JFrame implements ActionListener {
 					if (sm.getSendAlready())
 						JOptionPane.showMessageDialog(null, "sent successful");
 					else {
-						JOptionPane.showMessageDialog(null, "sent successful but receiver not exist in servermail");
+						JOptionPane.showMessageDialog(null, "receiver not exist in servermail");
 					}
 				dispose();
 			}

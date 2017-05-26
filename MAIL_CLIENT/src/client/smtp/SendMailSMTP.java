@@ -13,7 +13,7 @@ public class SendMailSMTP {
 	OutputStream sockOut = null;
 	InputStream sockIn = null;
 	ConnectionSocket conn = null;
-	boolean sendalready=false;
+	boolean sendalready = false;
 
 	public void connect(String server, int port) throws Exception {
 		smtpSocket = new Socket(server, port);
@@ -53,7 +53,10 @@ public class SendMailSMTP {
 			response = conn.receive();
 			System.out.println(response);
 			if ((response.trim().startsWith("250"))) {
-				sendalready=true;
+				sendalready = true;
+			} else {
+				conn.closeConnection();
+				return true;
 			}
 
 			conn.sendMsg("DATA");
@@ -82,20 +85,32 @@ public class SendMailSMTP {
 				conn.closeConnection();
 				return true;
 			}
-		} catch (Exception e) {
+		} catch (
+
+		Exception e)
+
+		{
 			e.printStackTrace();
 		}
 
-		try {
+		try
+
+		{
 			conn.closeConnection();
-		} catch (IOException e) {
+		} catch (
+
+		IOException e)
+
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
+
 	}
+
 	public boolean getSendAlready() {
-		return sendalready;	
+		return sendalready;
 	}
 
 }

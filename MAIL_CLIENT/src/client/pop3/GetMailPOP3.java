@@ -129,7 +129,7 @@ public class GetMailPOP3 {
 		//tao folder
 		System.out.println(folderName);
 		String[] contentmail=response.split("\\.");
-		String nameMail=contentmail[1].substring(7)+"-"+contentmail[3].substring(9);
+		String nameMail=contentmail[1].substring(7)+"-"+contentmail[3].substring(9)+contentmail[0].replace(' ', '-').replace(':', '-');
 		//name mail is sender+subject
 
 		int count = 0;

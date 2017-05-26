@@ -207,15 +207,15 @@ public class SMTP_TCPClientThread extends Thread {
 				count++;
 			}
 		}
-
-		File emailFile = new File("db/" + folderName +"/inbox"+ "/" + senderName + "-" +  subject+ ""
-				+ (count == 0 ? "" : ("_" + count)));
-		// tao file
-
 		Date current = new Date();
 		String pattern = "yyyy-MM-dd hh:mm:ss";
 		SimpleDateFormat format = new SimpleDateFormat(pattern);
 		String dateStr = format.format(current);
+		//datestr có chứa dấu khoảng cách
+		File emailFile = new File("db/" + folderName +"/inbox"+ "/" + senderName + "-" +  subject+ "-"+dateStr.replace(' ', '-').replace(':', '-')
+				+ (count == 0 ? "" : ("_" + count)));
+		// tao file
+
 
 		String writeToFile = dateStr + "\nfrom : " + senderName + "\nto : " + receiverName + "\n" + data;
 		FileOutputStream output;

@@ -242,7 +242,7 @@ class InfoMessageOfUser {
 
 	public static String getEmailString(String user, String nameMailbox, String nameMail) throws Exception {
 		try {
-			if (nameMail.contains("NEW"))
+			if (nameMail.contains("new"))//vì khi chuyển qua lại server thì tên mail dc lowercase
 				nameMail = nameMail.substring(0, nameMail.length() - 3);
 			File file = new File("db/" + user.split("@")[0].trim() + "/" + nameMailbox + "/" + nameMail);
 			String arrl = "";
@@ -348,7 +348,7 @@ class InfoMessageOfUser {
 					System.out.println("NGAY GUI MESSAGE: " + date);
 					if (date.compareTo(datebefore) == 1) {
 						count += 1;
-						arrNameMessageSend.add(f.getName() + " NEW");
+						arrNameMessageSend.add(f.getName() + "NEW");
 					} else
 						arrNameMessageSend.add(f.getName());
 					/*
