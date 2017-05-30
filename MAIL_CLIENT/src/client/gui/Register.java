@@ -62,7 +62,9 @@ public class Register extends javax.swing.JFrame implements ActionListener{
 	JLabel lb1, lb2, lb3, lb4,lb5, lb6, lb7;
 	JTextField tf1, tf2,tf3;
 	JPanel pn1, pn2, pn3, pn;
-	public Register() {
+	public String host;
+	public Register(String host) {
+		this.host=host;
 		setTitle("Register account screen");
 		setLocation(500, 200);
 		setVisible(true);
@@ -142,11 +144,11 @@ public class Register extends javax.swing.JFrame implements ActionListener{
 				if(checkInfomation){
 					try {
 						CreateAuth au=new CreateAuth();
-						au.connect("localhost", 32);
+						au.connect(host, 32);
 						if(au.command(user, pass)) {
 							JOptionPane.showMessageDialog(null, "register success!");
 							dispose();
-							new MailBox(user,pass);
+							new MailBox(user,pass,host);
 						}
 						else 
 						{							

@@ -34,8 +34,10 @@ public class Login extends JFrame implements ActionListener{
 	   private JTextField tf1;
 	   private JPasswordField tf2;
 	   private JPanel pn1,pn2,pn3,pn;
-     public Login(String s){
-     	setTitle(s);
+	   public String host;
+     public Login(String host){
+     	setTitle("Login screen");
+     	this.host=host;
      	setLocation(500,200);
      	setVisible(true);
      	setResizable(false);
@@ -95,10 +97,10 @@ public class Login extends JFrame implements ActionListener{
 				String  pass=tf2.getText().toString().trim();
 				try {
 					CheckAuth au=new CheckAuth();
-					au.connect("localhost", 32);
+					au.connect(host, 32);
 					if(au.command(user, pass)) {
 						dispose();
-						new MailBox(user,pass);
+						new MailBox(user,pass,host);
 					}
 					else 
 					{
@@ -118,7 +120,7 @@ public class Login extends JFrame implements ActionListener{
 			}
 			if(e.getSource()==register){
 				setVisible(false);
-				new Register();
+				new Register(host);
 			}
 			if(e.getSource()==reset){
 				tf1.setText("@abc");
@@ -126,10 +128,6 @@ public class Login extends JFrame implements ActionListener{
 			}
 			if(e.getSource()==exit) System.exit(0);
 			
-			
-		}
-		public static void main(String []args) {
-			new Login("Login Screen");
 			
 		}
 	}

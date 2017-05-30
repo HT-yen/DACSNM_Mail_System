@@ -38,6 +38,7 @@ public class MainServer {
 			accFolder.mkdir();
 		}
 		try {
+			//turn of firewall before transmit
 			serverSMTP = new ServerSocket(smtpTcpPort);
 			serverPOP3 = new ServerSocket(pop3TcpPort);
 			serverAUTH = new ServerSocket(authTcpPort);

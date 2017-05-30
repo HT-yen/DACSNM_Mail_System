@@ -26,8 +26,9 @@ public class SendMail_GUI extends JFrame implements ActionListener {
 	JTextArea ta;
 	JPanel pn1, pn2, pn3, pn4, pn;
 	String user_mail;
-
-	public SendMail_GUI(String user) {
+	public String host;
+	public SendMail_GUI(String user, String host) {
+		this.host=host;
 		this.user_mail = user;
 		initComponents();
 	}
@@ -78,7 +79,7 @@ public class SendMail_GUI extends JFrame implements ActionListener {
 		try {
 			if (e.getSource() == send) {
 				SendMailSMTP sm = new SendMailSMTP();
-				sm.connect("localhost", 25);
+				sm.connect(host, 25);
 				if (sm.command(user_mail, tf1.getText().toString(), tf2.getText().toString(), ta.getText().toString()))
 					if (sm.getSendAlready())
 						JOptionPane.showMessageDialog(null, "sent successful");

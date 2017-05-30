@@ -63,6 +63,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 	confirmDialog cd;
 	String NameMailCopy,NameMailBoxPaste,contentmail;
 	boolean iscopy=false;
+	public String host;
 	public static String getUSER_EMAIL() {
 		return USER_EMAIL;
 	}
@@ -71,9 +72,10 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		USER_EMAIL = user;
 	}
 
-	public MailBox(String user, String pass) {
+	public MailBox(String user, String pass, String host) {
 		this.USER_EMAIL = user;
 		this.PASS_EMAIL = pass;
+		this.host=host;
 		setTitle("YOUR MAILBOX");
 		setLocation(300, 100);
 		setVisible(true);
@@ -337,7 +339,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 			if (e.getSource() == send) {
 				Thread t = new Thread() {
 					public void run() {
-						new SendMail_GUI(USER_EMAIL).setVisible(true);
+						new SendMail_GUI(USER_EMAIL, host).setVisible(true);
 					}
 				};
 				t.start();
@@ -368,7 +370,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 				// động đóng connect rồi
 				IMAP_or_POP3 = 1;
 				pop3 = new GetMailPOP3();
-				pop3.connect("localhost", 110);
+				pop3.connect(host, 110);
 				pop3.command(USER_EMAIL, PASS_EMAIL);
 				ArrayList<String> allMail = pop3.getAllMail(USER_EMAIL);
 				for (int i = 0; i < allMail.size(); i++) {
@@ -400,7 +402,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 					imap.closeConnect();
 				IMAP_or_POP3 = 2;
 				imap = new GetMailIMAP();
-				imap.connect("localhost", 143);
+				imap.connect(host, 143);
 				if (imap.command(USER_EMAIL, PASS_EMAIL)) {
 					ArrayList<String> allMailBox = imap.getAllMailBox();
 					for (int i = 0; i < allMailBox.size(); i++) {
@@ -414,7 +416,7 @@ public class MailBox extends javax.swing.JFrame implements ActionListener {
 		}
 		if (e.getSource() == logout) {
 			dispose();
-			new Login("Login Screen");
+			new Login(host);
 
 		}
 	}
